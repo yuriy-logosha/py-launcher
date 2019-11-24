@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 logging.getLogger("googleapiclient").setLevel(logging.WARNING)
 
 
-working_dir= os.environ.get("WORKING_DIRECTORY", ".")
+working_dir= os.getenv("WORKING_DIRECTORY", ".")
 if working_dir:
     os.chdir(working_dir)
 
