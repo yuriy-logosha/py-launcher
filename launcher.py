@@ -95,9 +95,9 @@ def commands_update():
     while 1:
         if not scope:
             build_scope()
-        if not scope.fileIds:
+        if not scope or not scope.commandsFileId:
             return
-        COMMANDS = mygoogleapiclient.getValues(scope.fileIds)
+        COMMANDS = mygoogleapiclient.getValues(scope.commandsFileId)
         if not COMMANDS or len(COMMANDS) < 1:
             return
         myreg.set_value("commands", COMMANDS)
