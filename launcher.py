@@ -21,9 +21,8 @@ logging.getLogger("googleapiclient").setLevel(logging.WARNING)
 
 working_dir= os.getenv("WORKING_DIRECTORY", ".")
 if working_dir:
-    print("Changing working directory to " + working_dir)
+    logger.info("Changing working directory to " + working_dir)
     os.chdir(working_dir)
-
 
 player = socket.gethostname()
 remote = '192.168.1.63'
