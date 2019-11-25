@@ -250,8 +250,8 @@ def startLauncher():
 
     threads = [
         Thread(name="scheduler", target=scheduler, daemon=True),
-        Thread(name="commands_update", target=commands_update, daemon=True),
-        Thread(name="commands_process", target=commands_process, daemon=True),
+        # Thread(name="commands_update", target=commands_update, daemon=True),
+        # Thread(name="commands_process", target=commands_process, daemon=True),
         # Thread(name="show_queue", target=show_queue, daemon=True)
     ]
 
