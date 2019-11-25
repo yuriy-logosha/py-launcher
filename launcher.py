@@ -57,15 +57,16 @@ class Scope(threading.local):
 
 
 def action_wrapper(cmd, *args):
-    asyncio.run(_action(cmd, args[0] if len(args)>0 else [], args[1] if len(args)>1 else None));
-
-
-async def _action(cmd, args, data):
     global HISTORY, server
     HISTORY.append({'time': time.time(), 'args': args})
     print(cmd, args)
     r = action(cmd, args)
-    
+
+    asyncio.run(_update_server_with_results(r, args[1] if len(args)>1 else None));
+
+
+async def _update_server_with_results(r, data):
+    global server
     if server and data and r:
         await server.send(json.dumps(build_result(data['id'], r if isinstance(r, str) else r.decode("utf-8"), 'DONE')))
 
@@ -251,7 +252,7 @@ def startLauncher():
         Thread(name="scheduler", target=scheduler, daemon=True),
         Thread(name="commands_update", target=commands_update, daemon=True),
         Thread(name="commands_process", target=commands_process, daemon=True),
-        Thread(name="show_queue", target=show_queue, daemon=True)
+        # Thread(name="show_queue", target=show_queue, daemon=True)
     ]
 
     [th.start() for th in threads]
