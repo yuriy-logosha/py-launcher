@@ -6,7 +6,7 @@ import tempfile
 REG_PATH = r"SOFTWARE\Scheduler\Settings"
 
 
-file_name = tempfile.gettempdir()+ '\registry.json'
+file_name = tempfile.gettempdir()+ '\\registry.json'
 winreg = None
 
 class Processor:
