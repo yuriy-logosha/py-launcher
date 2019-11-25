@@ -58,9 +58,9 @@ class Scope(threading.local):
 
 def action_wrapper(cmd, *args):
     global HISTORY, server
-    HISTORY.append({'time': time.time(), 'args': args})
-    print(cmd, args)
-    r = action(cmd, args)
+    HISTORY.append({'time': time.time(), 'args': args[0]})
+    print(cmd, args[0])
+    r = action(cmd, args[0])
 
     asyncio.run(_update_server_with_results(r, args[1] if len(args)>1 else None));
 
