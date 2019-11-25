@@ -108,7 +108,7 @@ def commands_process():
         if not COMMANDS or len(COMMANDS) < 1:
             continue
         new_hash = 0    
-        for idx in range(2, len(COMMANDS)):
+        for idx in range(2, len(COMMANDS)-1):
             for i in range(0, len(COMMANDS[idx])-1):
                 new_hash += hash(COMMANDS[idx][i])
 
@@ -116,7 +116,7 @@ def commands_process():
             continue
         old_hash = new_hash
         clean_queue()
-        for idx in range(2, len(COMMANDS)):
+        for idx in range(2, len(COMMANDS)-1):
             row = COMMANDS[idx]
             processed_time = row[1]
             repeat_interval = row[2]
@@ -134,7 +134,7 @@ def commands_process():
             print("Adding ", time.ctime(next_time+time.time()), repeat_interval, cmd, row2List(row))
 
         new_hash = 0 
-        for idx in range(2, len(COMMANDS)):
+        for idx in range(2, len(COMMANDS)-1):
             for i in range(0, len(COMMANDS[idx])-1):
                 new_hash += hash(COMMANDS[idx][i])
 
