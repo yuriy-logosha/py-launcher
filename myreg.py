@@ -18,7 +18,7 @@ class Processor:
         return self._get_instance(type).get_reg_all()
     def _get_instance(self, type='json'):
         global winreg
-        if os.name is 'nt' and type == 'json':   
+        if os.name is 'nt' and type != 'json':   
             import winreg
 
             return WinRegProcessor()
