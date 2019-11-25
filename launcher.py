@@ -2,9 +2,6 @@
 
 import mygoogleapiclient as mygoogleapiclient
 from action import action as action
-#import mygoogleapiclientMock as mygoogleapiclient
-#from actionMock import action as action
-
 
 import sys, subprocess, sched, os, threading, re, socket, json, time, logging, websockets, asyncio, myreg
 from googleapiclient.errors import HttpError
@@ -126,7 +123,6 @@ def commands_process():
             cmd = row[3]
 
             if processed_time != "" and repeat_interval == "":
-                #print("Skipping ", processed_time, repeat_interval, cmd)
                 continue
             QUEUE.enter(to_time(time, datetime, int(processed_time), repeat_interval), 1, action_wrapper, (cmd, row2List(row)))
             print("Adding ", processed_time, repeat_interval, cmd)
@@ -195,11 +191,6 @@ async def connect_client():
                                 need_update = True
                             elif cmd == 'status':
                                 await server.send(json.dumps(build_status(data['id'], {'queue': queue2json(), 'history': history2json()})))
-
-
-                                # await server.send(json.dumps({'type': 'status',
-                                #                             'queue': queue2json(),
-                                #                             'history': history2json()}))
                             elif cmd == 'restart-thread':
                                 startLauncher()
                             elif cmd == 'clean-queue':
@@ -239,9 +230,6 @@ def startLauncher():
     ]
 
     [th.start() for th in threads]
-
-    # threads[0].join()
-
     while True:
         asyncio.get_event_loop().run_until_complete(connect_client())
 
