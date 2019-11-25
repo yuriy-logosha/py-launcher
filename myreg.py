@@ -1,56 +1,47 @@
 #!/usr/bin/env python3
 import os
-import json  
+import json
 
 REG_PATH = r"SOFTWARE\Scheduler\Settings"
 
 file_name = 'registry.json'
-details = {}
 winreg = None
 
-
 class WinRegProcessor:
-    def __init__(self):
-        pass
-
     def set_reg(self, name, value):
-        try:
-            winreg.CreateKey(winreg.HKEY_CURRENT_USER, REG_PATH)
-            registry_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, REG_PATH, 0, winreg.KEY_WRITE)
+        try:            
+            registry_key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, REG_PATH)
             if isinstance(value, str):
                 winreg.SetValueEx(registry_key, name, 0, winreg.REG_SZ, value)
             else:
                 winreg.SetValueEx(registry_key, name, 0, winreg.REG_DWORD, value)
             winreg.CloseKey(registry_key)
             return True
-        except WindowsError:
+        except OSError:
             return False
 
     def get_reg(self, name):
         try:
-            registry_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, REG_PATH, 0,
-                                        winreg.KEY_READ)
+            registry_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, REG_PATH, 0, winreg.KEY_READ)
             value, regtype = winreg.QueryValueEx(registry_key, name)
             winreg.CloseKey(registry_key)
             return value
-        except WindowsError:
+        except OSError:
             return None
 
     def get_reg_all(self):
         try:
             #TODO: Should be implemented
             return None
-        except WindowsError:
+        except OSError:
             return None
 
 
 class JsonProcessor:
-    def __init__(self):
-        pass
-
     def set_reg(self, name, value):
         data = self._read_file(file_name)
         if not data:
+            details = {}
             details[name] = value
             with open(file_name, 'w+') as json_file:
                 json.dump(details, json_file)
@@ -58,7 +49,6 @@ class JsonProcessor:
             data[name] = value
             with open(file_name, 'w+') as json_file:
                 json.dump(data, json_file)
-        
 
     def get_reg(self, name):
         data = self._read_file(file_name)
@@ -97,20 +87,16 @@ def _processor_factory():
 
         return WinRegProcessor()
     else:
-        import json    
-
         return JsonProcessor()
 
-PROCESSOR = _processor_factory()
-
 def _set_reg(name, value):
-    return PROCESSOR.set_reg(name, value)
+    return _processor_factory.set_reg(name, value)
 
 def _get_reg(name):
-    return PROCESSOR.get_reg(name)
+    return _processor_factory.get_reg(name)
 
 def _get_reg_all():
-    return PROCESSOR.get_reg_all()
+    return _processor_factory.get_reg_all()
 
 
 ##############################################
