@@ -91,7 +91,7 @@ class JsonProcessor:
 ##############################################
 
 def _processor_factory():
-    #global json, winreg
+    global json, winreg
     if os.name is 'nt':   
         import winreg
 
