@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
 import os
 import json
+import tempfile
 
 REG_PATH = r"SOFTWARE\Scheduler\Settings"
 
-file_name = 'registry.json'
+
+file_name = tempfile.gettempdir()+ '\registry.json'
 winreg = None
 
 class Processor:
-    def set_reg(self, name, value):
-        return self._get_instance().set_reg(name, value)
-    def get_reg(self, name):
-        return self._get_instance().get_reg(name)
-    def get_reg_all(self):
-        return self._get_instance().get_reg_all()
-    def _get_instance(self):
+    def set_reg(self, name, value, type='json'):
+        return self._get_instance(type).set_reg(name, value)
+    def get_reg(self, name, type='json'):
+        return self._get_instance(type).get_reg(name)
+    def get_reg_all(self, type='json'):
+        return self._get_instance(type).get_reg_all()
+    def _get_instance(self, type='json'):
         global winreg
-        if os.name is 'nt':   
+        if os.name is 'nt' and type == 'json':   
             import winreg
 
             return WinRegProcessor()
