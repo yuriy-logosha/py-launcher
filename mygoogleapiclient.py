@@ -139,9 +139,9 @@ def sheet(service, SPREADSHEET_ID, RANGE_NAME):
         return values
         
 
-def update(service, SPREADSHEET_ID, RANGE_NAME):
+def update(service, SPREADSHEET_ID, RANGE_NAME, tm):
     try:
-        values = [[time.time()]]
+        values = [[tm]]
         body = {'values': values}
         result = service.spreadsheets().values().update(spreadsheetId=SPREADSHEET_ID,
                                                         range=RANGE_NAME,

@@ -7,6 +7,23 @@ REG_PATH = r"SOFTWARE\Scheduler\Settings"
 file_name = 'registry.json'
 winreg = None
 
+class Processor:
+    def set_reg(self, name, value):
+        return self._get_instance().set_reg(name, value)
+    def get_reg(self, name):
+        return self._get_instance().get_reg(name)
+    def get_reg_all(self):
+        return self._get_instance().get_reg_all()
+    def _get_instance(self):
+        global winreg
+        if os.name is 'nt':   
+            import winreg
+
+            return WinRegProcessor()
+        else:
+            return JsonProcessor()
+
+
 class WinRegProcessor:
     def set_reg(self, name, value):
         try:            
@@ -80,23 +97,17 @@ class JsonProcessor:
 #
 ##############################################
 
-def _processor_factory():
-    global json, winreg
-    if os.name is 'nt':   
-        import winreg
-
-        return WinRegProcessor()
-    else:
-        return JsonProcessor()
-
 def _set_reg(name, value):
-    return _processor_factory.set_reg(name, value)
+    p = Processor()
+    return p.set_reg(name, value)
 
 def _get_reg(name):
-    return _processor_factory.get_reg(name)
+    p = Processor()
+    return p.get_reg(name)
 
 def _get_reg_all():
-    return _processor_factory.get_reg_all()
+    p = Processor()
+    return p.get_reg_all()
 
 
 ##############################################

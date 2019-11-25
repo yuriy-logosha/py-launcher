@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 logging.getLogger("googleapiclient").setLevel(logging.WARNING)
 
 
-working_dir= os.getenv("WORKING_DIRECTORY", ".")
+working_dir= os.getenv("WORKING_DIRECTORY")
 if working_dir:
     logger.info("Changing working directory to " + working_dir)
     os.chdir(working_dir)
@@ -42,8 +42,6 @@ app = None
 server = None
 scope = None
 
-
-
 class Scope(threading.local):
     def __init__(self, files, fileIds=[]):
         super().__init__()
@@ -65,6 +63,7 @@ def action_wrapper(cmd, *args):
 async def _action(cmd, args, data):
     global HISTORY, server
     HISTORY.append({'time': time.time(), 'args': args})
+    print(cmd, args)
     r = action(cmd, args)
     
     if server and data and r:
@@ -103,7 +102,7 @@ def commands_update():
 
 old_hash = 0 
 def commands_process():
-    global QUEUE, COMMANDS, old_hash
+    global QUEUE, COMMANDS, old_hash, scope
     while 1:
         if not COMMANDS or len(COMMANDS) < 1:
             continue
@@ -124,11 +123,37 @@ def commands_process():
 
             if processed_time != "" and repeat_interval == "":
                 continue
-            QUEUE.enter(to_time(time, datetime, int(processed_time), repeat_interval), 1, action_wrapper, (cmd, row2List(row)))
-            print("Adding ", processed_time, repeat_interval, cmd)
+            if processed_time == "":
+                QUEUE.enter(0, 1, action_wrapper, (cmd, row2List(row)))
+                processed_time = update_processed_time(idx + 1)
+            if repeat_interval != "":
+                next_time = to_time(time, datetime, int(processed_time), repeat_interval)
+                QUEUE.enter(next_time, 1, action_wrapper, (cmd, row2List(row)))
 
+            print("Adding ", time.ctime(next_time+time.time()), repeat_interval, cmd, row2List(row))
+
+        new_hash = 0 
+        for idx in range(2, len(COMMANDS)):
+            for i in range(0, len(COMMANDS[idx])-1):
+                new_hash += hash(COMMANDS[idx][i])
+
+        old_hash = new_hash
             
         time.sleep(5)
+
+
+def update_processed_time(idx):
+    global COMMANDS, scope
+    tm = time.time()
+    COMMANDS[idx][1] = tm
+    if not scope:
+        build_scope()
+    if scope and scope.commandsFileId:
+        try:
+            mygoogleapiclient.update(mygoogleapiclient.sheets(), scope.commandsFileId, "Form responses 1!B{0}".format(idx), tm)
+        except Exception as e:
+            logger.exception(e)
+    return tm
 
 
 async def update_settings(settings, data):
@@ -226,13 +251,12 @@ def startLauncher():
         Thread(name="scheduler", target=scheduler, daemon=True),
         Thread(name="commands_update", target=commands_update, daemon=True),
         Thread(name="commands_process", target=commands_process, daemon=True),
-        # Thread(name="show_queue", target=show_queue, daemon=True)
+        Thread(name="show_queue", target=show_queue, daemon=True)
     ]
 
     [th.start() for th in threads]
     while True:
         asyncio.get_event_loop().run_until_complete(connect_client())
-
 
 
 if __name__ == "__main__":
