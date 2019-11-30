@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
 import mygoogleapiclient as mygoogleapiclient
-from action import action as action
 
-import sys, subprocess, sched, os, threading, re, socket, json, time, logging, websockets, asyncio, myreg
+import pathlib, sys, subprocess, sched, os, threading, re, socket, json, time, logging, websockets, asyncio, myreg
 from googleapiclient.errors import HttpError
 from ssl import SSLError
 from threading import Thread
 from datetime import datetime
 from utils import str2SMH, build_result, build_status, row2List, to_time
 
+LOOP = asyncio.get_event_loop()
 logger = logging.getLogger("launcher")
 logging.basicConfig(level=logging.INFO)
 
@@ -55,20 +55,47 @@ class Scope(threading.local):
 #
 ####################################
 
-
 def action_wrapper(cmd, *args):
-    global HISTORY, server
-    HISTORY.append({'time': time.time(), 'args': args[0]})
-    print(cmd, args[0])
-    r = action(cmd, args[0])
+    global HISTORY, LOOP
+    HISTORY.append({'time': time.time(), 'args': [cmd] + args[0]})
 
-    asyncio.run(_update_server_with_results(r, args[1] if len(args)>1 else None));
+    filename, file_extension = os.path.splitext(cmd)
 
+    if not file_extension == '.py':
+        cmd = cmd + '.py'
 
-async def _update_server_with_results(r, data):
-    global server
-    if server and data and r:
-        await server.send(json.dumps(build_result(data['id'], r if isinstance(r, str) else r.decode("utf-8"), 'DONE')))
+    data = args[1] if len(args)>1 else None
+
+    if pathlib.Path(cmd).is_file():
+        a = []
+        a.insert(0, cmd)
+        a.insert(0, "python")
+        print(a)
+        asyncio.ensure_future(run(' '.join(args[0]), data), loop = LOOP)
+    else:
+        if data:
+            asyncio.ensure_future(run(data['command'], data), loop = LOOP)
+
+async def run(cmd, data):
+    proc = await asyncio.create_subprocess_shell(
+        cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE)
+
+    stdout, stderr = await proc.communicate()
+
+    print(f'[{cmd!r} exited with {proc.returncode}]')
+    if stdout:
+        print(f'{stdout.decode()}')
+        r = stdout.decode()
+        if server:
+            await server.send(json.dumps(build_result(data['id'], r if isinstance(r, str) else r.decode("utf-8"), 'DONE')))
+
+    if stderr:
+        print(f'{stderr.decode()}')
+        r = stderr.decode()
+        if server:
+            await server.send(json.dumps(build_result(data['id'], r if isinstance(r, str) else r.decode("utf-8"), 'DONE')))
 
 
 def build_scope():
@@ -247,17 +274,17 @@ def show_queue():
         time.sleep(1)
 
 def startLauncher():
-
+    global LOOP
     threads = [
         Thread(name="scheduler", target=scheduler, daemon=True),
         # Thread(name="commands_update", target=commands_update, daemon=True),
-        # Thread(name="commands_process", target=commands_process, daemon=True),
+        Thread(name="commands_process", target=commands_process, daemon=True),
         # Thread(name="show_queue", target=show_queue, daemon=True)
     ]
 
     [th.start() for th in threads]
     while True:
-        asyncio.get_event_loop().run_until_complete(connect_client())
+        LOOP.run_until_complete(connect_client())
 
 
 if __name__ == "__main__":
